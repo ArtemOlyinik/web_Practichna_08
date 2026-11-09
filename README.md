@@ -175,6 +175,8 @@ export class CarModelEntity {
 carModel!: CarModelEntity;
 ```
 
+![Опис зв'язків 1:M, M:N і 1:1 у сутності AutoPartEntity](screenshots/01-entity-relations.png)
+
 Початкову міграцію згенеровано порівнянням сутностей зі схемою порожньої бази:
 
 ```bash
@@ -302,6 +304,8 @@ export class CompatibilityCodeEntity {
   autoPart!: Relation<AutoPartEntity>;
 }
 ```
+
+![Сутність OEM-коду: володіюча сторона зв'язку 1:1](screenshots/02-one-to-one-entity.png)
 
 Третю міграцію згенеровано командою:
 
