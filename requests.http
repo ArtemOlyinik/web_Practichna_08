@@ -1,0 +1,95 @@
+@host = http://localhost:3000
+
+### 1. Створити модель авто (довідник для зв'язку 1:M)
+POST {{host}}/car-models
+Content-Type: application/json
+
+{
+  "name": "Camry XV70",
+  "brand": "Toyota",
+  "yearFrom": 2017,
+  "yearTo": 2024
+}
+
+### 2. Переглянути довідник моделей
+GET {{host}}/car-models
+
+### 3. Створити вузол/агрегат (довідник для зв'язку M:N)
+POST {{host}}/specifications
+Content-Type: application/json
+
+{
+  "name": "Гальмівна система",
+  "description": "Колодки, диски, супорти та гальмівні шланги"
+}
+
+### 4. Створити запчастину з 1:1-кодом і M:N-характеристиками в транзакції
+POST {{host}}/auto-parts/transactional
+Content-Type: application/json
+
+{
+  "title": "Гальмівні колодки передні Brembo P85020",
+  "price": 2450,
+  "oemCode": "P85020",
+  "condition": "NEW",
+  "carModelId": "{{carModelId}}",
+  "specificationNames": ["Гальмівна система", "Підвіска"],
+  "compatibilityCode": {
+    "code": "P85020-OEM",
+    "manufacturer": "Brembo",
+    "isInterchangeable": true,
+    "notes": "Аналог TRW GDB1330"
+  }
+}
+
+### 5. Список із пагінацією
+GET {{host}}/auto-parts?page=1&limit=10
+
+### 6. Фільтр за вузлом/агрегатом (M:N, QueryBuilder + innerJoinAndSelect)
+GET {{host}}/auto-parts?specification=Гальмівна
+
+### 7. Фільтр за моделлю авто (M:1)
+GET {{host}}/auto-parts?carModel=Toyota
+
+### 8. Повний агрегат: 1:M + M:N + 1:1
+GET {{host}}/auto-parts/{{id}}/aggregate
+
+### 9. Повне оновлення агрегата в транзакції
+PUT {{host}}/auto-parts/{{id}}/transactional
+Content-Type: application/json
+
+{
+  "price": 2390,
+  "specificationNames": ["Гальмівна система", "Електрика"],
+  "compatibilityCode": {
+    "code": "P85020-OEM",
+    "manufacturer": "Brembo",
+    "notes": "Оновлено в межах транзакції"
+  }
+}
+
+### 10. Імітація збою: усі зміни відкочуються
+POST {{host}}/auto-parts/transactional
+Content-Type: application/json
+
+{
+  "title": "Тестова деталь для відкату",
+  "price": 1500,
+  "oemCode": "FAIL-ROLLBACK",
+  "condition": "NEW",
+  "carModelId": "{{carModelId}}",
+  "specificationNames": ["Підвіска"],
+  "compatibilityCode": {
+    "code": "FAIL-CODE-1",
+    "manufacturer": "TestCorp"
+  },
+  "simulateFailure": true
+}
+
+### 11. Каскадне видалення моделі авто разом із запчастинами та їхніми кодами
+DELETE {{host}}/car-models/{{carModelId}}
+
+### 12. М'яке видалення та відновлення запчастини
+DELETE {{host}}/auto-parts/{{id}}
+
+PATCH {{host}}/auto-parts/{{id}}/restore
